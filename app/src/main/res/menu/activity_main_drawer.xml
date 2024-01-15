@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_create_shopping_list"
+            android:icon="@drawable/shopping_basket_icon"
+            android:title="@string/menu_create_shopping_list" />
+        <item
+            android:id="@+id/nav_show_lists"
+            android:icon="@drawable/list_icon"
+            android:title="@string/menu_show_shopping_lists" />
+    </group>
+
+    <item
+        android:id="@+id/other_menu_groups"
+        android:title="@string/menu_groups" >
+        <menu
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <item
+                android:id="@+id/nav_create_groups"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:icon="@drawable/groups_icon"
+                android:title="@string/menu_create_group" />
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/other_menu_account"
+        android:title="@string/menu_account" >
+        <menu
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <item
+                android:id="@+id/nav_logut"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:icon="@drawable/logout_icon"
+                android:title="@string/menu_logout" />
+        </menu>
+    </item>
+</menu>
