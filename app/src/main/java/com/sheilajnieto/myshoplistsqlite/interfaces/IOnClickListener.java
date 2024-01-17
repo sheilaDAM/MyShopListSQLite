@@ -1,5 +1,6 @@
 package com.sheilajnieto.myshoplistsqlite.interfaces;
 
 public interface IOnClickListener {
-    void onClick(int position);
+    void onShoppingListClicked(int position);
+    void onCategoryClicked(int position);
 }

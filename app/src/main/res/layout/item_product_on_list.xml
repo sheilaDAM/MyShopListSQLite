@@ -8,7 +8,7 @@
 
 
     <ImageView
-        android:id="@+id/ivProduct"
+        android:id="@+id/ivCategoryImage"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_marginStart="24dp"
@@ -45,6 +45,6 @@
         android:maxLines="1"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/ivProduct"
+        app:layout_constraintStart_toEndOf="@+id/ivCategoryImage"
         app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

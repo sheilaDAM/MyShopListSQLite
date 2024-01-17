@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.sheilajnieto.myshoplistsqlite.R;
 import com.sheilajnieto.myshoplistsqlite.interfaces.DAO;
 import com.sheilajnieto.myshoplistsqlite.models.Category;
 import com.sheilajnieto.myshoplistsqlite.models.Product;
@@ -26,9 +27,10 @@ public class CategoryDAO extends DAO<Category> {
     private final Map<String, Integer> columnIndex;
     private Context context;
 
-    public CategoryDAO(SQLiteDatabase db) {
+    public CategoryDAO(SQLiteDatabase db, Context context) {
         super(TABLE_NAME);
         this.db = db;
+        this.context = context;
         columnIndex = new HashMap<>();
         fillColumnIndex();
     }
@@ -51,14 +53,31 @@ public class CategoryDAO extends DAO<Category> {
                     int id = c.getInt(columnIndex.get("id"));
                     String categoryName = c.getString(columnIndex.get("category_name"));
                     String imageName = c.getString(columnIndex.get("category_image_path"));
+                    //String imageNameWithoutExtension = imageName.replaceFirst("[.][^.]+$", "");
+                    String imageNameWithoutExtension = imageName.replace(".jpg", "");
+                    //obtenemos el id del recurso drawable
+                    int drawableID = context.getResources().getIdentifier(imageNameWithoutExtension, "drawable", context.getPackageName());
 
+                    //verificamos que se encontró el recurso (que existe la imagen en drawable)
+                    if (drawableID != 0) {
+                        // Cargar la imagen como Bitmap
+                        Bitmap imageBitmap = BitmapFactory.decodeResource(context.getResources(), drawableID);
+                        categories.add(new Category(id, categoryName, imageBitmap));
+                    }
+
+            /*
                     // Construimos la ruta de la imagen desde el nombre
                     String imagePath = "android.resource://" + context.getPackageName() + "/drawable/" + imageName;
 
                     // Cargar la imagen como Bitmap
                     Bitmap imageBitmap = loadImageFromPath(imagePath);
 
+                    //guardamos los datos en la lista
                     categories.add(new Category(id, categoryName, imageBitmap));
+
+             */
+
+
                 } while (c.moveToNext());
             }
         }

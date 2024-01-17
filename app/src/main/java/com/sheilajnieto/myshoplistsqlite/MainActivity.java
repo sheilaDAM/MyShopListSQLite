@@ -22,27 +22,31 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.ShoppingListSQLiteHelper;
+import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.CategoryDAO;
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.ListDAO;
 import com.sheilajnieto.myshoplistsqlite.interfaces.IOnClickListener;
 import com.sheilajnieto.myshoplistsqlite.models.ListClass;
 import com.sheilajnieto.myshoplistsqlite.ui.AddListBoxDialogFragment;
-import com.sheilajnieto.myshoplistsqlite.ui.DetailListFragment;
 import com.sheilajnieto.myshoplistsqlite.ui.FragmentNoLists;
+import com.sheilajnieto.myshoplistsqlite.ui.FragmentNoProducts;
 import com.sheilajnieto.myshoplistsqlite.ui.ListFragment;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, AddListBoxDialogFragment.OnListAddedListener, IOnClickListener, ListFragment.IOnAttachListener {
 
     private DrawerLayout drawerLayout;
-    private ListFragment listFragment;
-    private FragmentNoLists fragmentNoLists;
-    private FragmentManager fragmentManager = getSupportFragmentManager();
+    private ListFragment listFragment; //fragmento que se muestra cuando hay listas
+    private FragmentNoLists fragmentNoLists; //fragmento que se muestra cuando no hay listas
+    private FragmentNoProducts fragmentNoProducts; //fragmento que se muestra cuando no hay productos
+    private FragmentManager fragmentManager = getSupportFragmentManager(); //para poder tratar los fragments por código
     private Toolbar toolbar;
     private View headerLayout;
-    private DetailListFragment fragmentDetalle;
-    private boolean hayDetalle;
-    private int listClicked;
+    private ListFragment.ListType listType; //para determinar qué tipo de listado se muestra, si listas, categorías o productos
+    private boolean shoppingListClicked; //para saber si se ha pulsado sobre una lista de la compra
     private SQLiteDatabase db;
-    private ListDAO listDAO;
+    private ListDAO listDAO; //para acceder a los métodos de listDAO y poder hacer las consultas a la base de datos
+    private int listSelected; //guarda el id de la lista seleccionada
+    private ListClass shoppingListSelected; //guarda la lista seleccionada
+    private Fragment currentFragment; //para saber en qué fragment estamos
 
 
     @Override
@@ -58,30 +62,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         listDAO = new ListDAO(db);
+
         setContentView(R.layout.activity_main);
+
+        //Si hay listas en la base de datos, cargamos el fragmento de listas, si no, cargamos el fragmento de no hay listas
         if(listDAO.findAll().size() > 0) {
             listFragment = new ListFragment();
-            fragmentManager.beginTransaction()
+            listType = ListFragment.ListType.SHOPPING_LIST;
+            fragmentManager.beginTransaction().addToBackStack(null)
                     .replace(R.id.nav_host_fragment_content_main, listFragment)
                     .commit();
         } else {
             fragmentNoLists = new FragmentNoLists();
-            fragmentManager.beginTransaction()
+            fragmentManager.beginTransaction().addToBackStack(null)
                     .replace(R.id.nav_host_fragment_content_main, fragmentNoLists)
                     .commit();
         }
 
-
+      //------- MANEJO BOTÓN FLOTANTE + QUE APARECE EN LA PARTE INFERIOR DERECHA PARA AÑADIR LISTAS/PRODUCTOS
         FloatingActionButton btAdd = findViewById(R.id.fbtAdd);
         btAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showAddListDialog();
+                if (shoppingListClicked && currentFragment instanceof ListFragment) {
+                    showAddListBoxDialog(); //este método mostrará el cuadro de diálogo para añadir una lista al pulsar el botón
+                } else if (shoppingListClicked && currentFragment instanceof FragmentNoProducts) {
+                    //mostrará el listado de categorías para elegir una
+                    listType = ListFragment.ListType.CATEGORY_LIST;
+                    listFragment.uptadateList(listType);
+                    fragmentManager.beginTransaction().addToBackStack(null)
+                            .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
+                            .commit();
+                }
             }
         });
 
+        //--------ESTRUCTURA NAVIGATION DRAWER--------
+
         toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("Lista de la compra");
+        toolbar.setTitle("Mis listas de la compra");
         setSupportActionBar(toolbar);
 
 
@@ -94,55 +113,57 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         navigationView.setNavigationItemSelectedListener(this);
         headerLayout = navigationView.getHeaderView(0);
-        actualizarDatosNavigationDrawer();
+        updateDataNavigationDrawer();
 
+        //------- MANEJO BOTÓN RETROCESO -------
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                Fragment currentFragment = fragmentManager.findFragmentById(R.id.nav_host_fragment_content_main);
-                if (hayDetalle) {
-                    if (currentFragment instanceof DetailListFragment && fragmentManager.getBackStackEntryCount() > 0) {
-                        fragmentManager.popBackStack();
-                        hayDetalle = false;
-                    }
-                } else if (!hayDetalle) {
-                    if (drawerLayout.isOpen()) {
-                        drawerLayout.close();
-                    } else {
-                        // Si no hay detalle y no está abierto el cajón de navegación, cierra la aplicación
-                        finishAffinity();
-                    }
+                currentFragment = fragmentManager.findFragmentById(R.id.nav_host_fragment_content_main);
+
+                // Si estamos en la lista de categorías, regresamos a la lista de la compra
+                if (shoppingListClicked && currentFragment instanceof ListFragment && fragmentManager.getBackStackEntryCount() > 0) {
+                    listType = ListFragment.ListType.SHOPPING_LIST;
+                    listFragment.uptadateList(listType);
+                    fragmentManager.popBackStack();
+                    fragmentManager.beginTransaction().addToBackStack(null).addToBackStack(null)
+                            .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
+                            .commit();
+                    toolbar.setTitle("Mis listas de la compra");
+                    shoppingListClicked = false;
+                } else if (shoppingListClicked && currentFragment instanceof FragmentNoProducts && fragmentManager.getBackStackEntryCount() > 0) {
+                    fragmentManager.popBackStack();
+                    listFragment.uptadateList(ListFragment.ListType.SHOPPING_LIST);
+                    toolbar.setTitle("Mis listas de la compra");
+                    shoppingListClicked = false;
+                }else {
+                        finish();
+                }
+                // Si el cajón de navegación está abierto, lo cerramos
+                if (drawerLayout.isOpen()) {
+                    drawerLayout.close();
                 }
             }
         });
 
-        /* FIN ESTRUCTURA NAVIGATION DRAWER*/
 
 } //FIN onCreate
 
-    private void showAddListDialog() {
-        AddListBoxDialogFragment dialog = new AddListBoxDialogFragment();
-        dialog.setOnListAddedListener(this);
-        dialog.show(getSupportFragmentManager(), "AddListDialogFragment");
-    }
-
-    private void actualizarDatosNavigationDrawer() {
+    //ESTE MÉTODO SIRVE PARA ACTUALIZAR DATOS DEL NAVIGATION DRAWER
+    private void updateDataNavigationDrawer() {
 
         TextView tvUserName = headerLayout.findViewById(R.id.tvUserName);
         TextView tvUserEmail = headerLayout.findViewById(R.id.tvUserEmail);
 
-        tvUserName.setText("Sheila Jiménez Nieto");
-        tvUserEmail.setText("sheilajnieto@gmail.com");
+        tvUserName.setText("Mi app de la compra");
+        tvUserEmail.setText("Salud y alimentación");
     }
 
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
     }
 
-    public void cargarDatos() {
-       // Toast.makeText(this, "Listas cargadas: ", Toast.LENGTH_SHORT).show();
-    }
-
+    //MÉTODO PARA MOSTRAR EL MENÚ DE OPCIONES EN LA TOOLBAR (EL DE LOS 3 PUNTOS)
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
@@ -166,6 +187,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return false;
     }
 
+    //MÉTODO PARA MOSTRAR EL MENÚ DE OPCIONES EN EL NAVIGATION DRAWER (EL DE LAS 3 RAYITAS)
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
@@ -179,24 +201,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    @Override
-    public void onClick(int position) {
-        listClicked = position;
-        hayDetalle = true;
-        FragmentManager manager = getSupportFragmentManager();
-        manager.beginTransaction()
-                .setReorderingAllowed(true)
-                .addToBackStack(null)
-                .replace(R.id.nav_host_fragment_content_main, DetailListFragment.class, null)
-                .commit();
+    /*------ FIN ESTRUCTURA NAVIGATION DRAWER ----------*/
 
+    //ESTE MÉTODO SE EJECUTA CUANDO SE HACE CLICK EN EL BOTÓN DE AÑADIR LISTA
+    private void showAddListBoxDialog() {
+        AddListBoxDialogFragment dialog = new AddListBoxDialogFragment();
+        dialog.setOnListAddedListener(this);
+        dialog.show(getSupportFragmentManager(), "AddListDialogFragment");
     }
 
+    //CUANDO INSERTEMOS UNA LISTA NUEVA, SE EJECUTA ESTE MÉTODO
     @Override
     public void onListAdded(String listName) {
-
-        // Creamos una instancia de ListDAO para insertar la nueva lista en la base de datos
-        //listDAO = new ListDAO(db);
 
         // Creamos una nueva lista con el nombre insertado en el cuadro de diálogo
         ListClass newList = new ListClass(listName);
@@ -205,6 +221,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         boolean isInserted = listDAO.insert(newList);
 
         if (isInserted) {
+            listType = ListFragment.ListType.SHOPPING_LIST;
+            listFragment.uptadateList(listType);
             // Si se inserta la nueva lista en la bd se reemplaza el fragmento actual con ListFragment
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
@@ -220,12 +238,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    //CUANDO PULSEMOS SOBRE UN ITEM LISTA (ES DECIR, SOBRE UNA LISTA DE LA COMPRA) SE EJECUTARÁ ESTE MÉTODO
+    @Override
+    public void onShoppingListClicked(int position) {
+        listSelected = position+1; //la posición empieza en 0, pero el id de la lista empieza en 1, para que coincidan sumamos 1
+        shoppingListSelected = listDAO.findById(listSelected);
+        shoppingListClicked = true;
+        toolbar.setTitle(shoppingListSelected.getName());
+
+        if (listDAO.hasProducts(shoppingListSelected.getId())) {
+
+            listType = ListFragment.ListType.CATEGORY_LIST;
+            listFragment.uptadateList(listType);
+            fragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .addToBackStack(null)
+                    .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
+                    .commit();
+        }else {
+            fragmentNoProducts= new FragmentNoProducts();
+            fragmentManager.beginTransaction().addToBackStack(null)
+                    .replace(R.id.nav_host_fragment_content_main, fragmentNoProducts)
+                    .commit();
+        }
+    }
+
+    @Override
+    public void onCategoryClicked(int position) {
+
+    }
+
     @Override
     public SQLiteDatabase getDatabase() {
         if(db == null) {
             db = ShoppingListSQLiteHelper.getInstance(this).getWritableDatabase();
         }
         return db;
+    }
+
+    @Override
+    public ListFragment.ListType getListType() {
+        return listType;
+    }
+
+    @Override
+    public ListClass getList() {
+        return shoppingListSelected;
     }
 }
 

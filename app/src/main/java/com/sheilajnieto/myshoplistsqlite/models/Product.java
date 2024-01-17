@@ -9,22 +9,31 @@ public class Product {
 
     private int id;
     private String name;
-    private String category;
+    private int fkCategory;
+    private boolean isPurchased;
     private Bitmap image;
 
     public Product() {
     }
 
-    public Product(String name, String category, Bitmap image) {
+    public Product(String name, int fkCategory, Bitmap image) {
         this.name = name;
-        this.category = category;
+        this.fkCategory = fkCategory;
         this.image = image;
     }
 
-    public Product(int id, String name, String category, Bitmap image) {
+    public Product(int id, String name, int fkCategory, Bitmap image) {
         this.id = id;
         this.name = name;
-        this.category = category;
+        this.fkCategory = fkCategory;
+        this.image = image;
+    }
+
+    public Product(int id, String name, int fkCategory, boolean isPurchased, Bitmap image) {
+        this.id = id;
+        this.name = name;
+        this.fkCategory = fkCategory;
+        this.isPurchased = isPurchased;
         this.image = image;
     }
 
@@ -36,8 +45,8 @@ public class Product {
         return name;
     }
 
-    public String getCategory() {
-        return category;
+    public int getFkCategory() {
+        return fkCategory;
     }
 
     public Bitmap getImage() {
@@ -52,7 +61,7 @@ public class Product {
         this.name = name;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setFkCategory(int fkCategory) {
+        this.fkCategory = fkCategory;
     }
 }

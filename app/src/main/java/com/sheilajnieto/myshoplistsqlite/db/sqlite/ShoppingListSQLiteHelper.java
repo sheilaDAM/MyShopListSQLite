@@ -54,13 +54,13 @@ public class ShoppingListSQLiteHelper extends SQLiteOpenHelper {
         static {
             sqlInsertTableCategories = "INSERT INTO categories (category_name, category_image_path) " +
                     "VALUES " +
-                    "('Frutas, verduras, tubérculos', 'vegetablesfruits.jpeg'), " +
-                    "('Bebidas vegetales', 'vegetablesdrinks.jpeg'), " +
+                    "('Frutas, verduras, tubérculos', 'vegetablesfruits.jpg'), " +
+                    "('Bebidas vegetales', 'vegetablesdrinks.jpg'), " +
                     "('Lácteos', 'milks.jpg'), " +
-                    "('Productos de limpieza', 'cleaning.jpeg'), " +
-                    "('Condimentos', 'condiments.jpeg'), " +
+                    "('Productos de limpieza', 'cleaning.jpg'), " +
+                    "('Condimentos', 'condiments.jpg'), " +
                     "('Cereales', 'cereal.jpg'), " +
-                    "('Proteínas', 'protein.jpeg');";
+                    "('Proteínas', 'protein.jpg');";
         }
 
     private static final String sqlInsertTableProducts;
@@ -68,29 +68,29 @@ public class ShoppingListSQLiteHelper extends SQLiteOpenHelper {
         static {
             sqlInsertTableProducts = "INSERT INTO products (product_name, fk_category_id, product_image_path) " +
                     "VALUES " +
-                    "('Manzanas', 1, 'apples.jpeg'), " +
-                    "('Pepino', 1, 'cucumber.jpeg'), " +
-                    "('Uvas', 1, 'grapes.jpeg'), " +
+                    "('Manzanas', 1, 'apples.jpg'), " +
+                    "('Pepino', 1, 'cucumber.jpg'), " +
+                    "('Uvas', 1, 'grapes.jpg'), " +
                     "('Yuka', 1, 'yuka.jpg'), " +
-                    "('Patatas', 1, 'potatoes.jpeg'), " +
+                    "('Patatas', 1, 'potatoes.jpg'), " +
                     "('Boniato', 1, 'sweetpotatoe.jpg'), " +
-                    "('Zanahoria', 1, 'carrots.jpeg'), " +
-                    "('Calabacín', 1, 'courgette.jpeg'), " +
-                    "('Aguacate', 1, 'avocado.jpeg'), " +
-                    "('Cebolla', 1, 'onion.jpeg'), " +
-                    "('Leche de coco', 2, 'coconutmilk.jpeg'), " +
-                    "('Yogur de coco', 2, 'cocoyoghurt.jpeg'), " +
+                    "('Zanahoria', 1, 'carrots.jpg'), " +
+                    "('Calabacín', 1, 'courgette.jpg'), " +
+                    "('Aguacate', 1, 'avocado.jpg'), " +
+                    "('Cebolla', 1, 'onion.jpg'), " +
+                    "('Leche de coco', 2, 'coconutmilk.jpg'), " +
+                    "('Yogur de coco', 2, 'cocoyoghurt.jpg'), " +
                     "('Queso fresco vaca', 3, 'freshcheese.jpg'), " +
-                    "('Aceite de oliva', 5, 'oliveoil.jpeg'), " +
-                    "('Sal', 5, 'salt.jpeg'), " +
-                    "('Vinagre de manzana', 5, 'vinegar.jpeg'), " +
+                    "('Aceite de oliva', 5, 'oliveoil.jpg'), " +
+                    "('Sal', 5, 'salt.jpg'), " +
+                    "('Vinagre de manzana', 5, 'vinegar.jpg'), " +
                     "('Orégano', 5, 'oregano.jpeg'), " +
-                    "('Limpiador de baños', 4, 'bathcleaner.jpeg'), " +
-                    "('Limpiador vajilla', 5, 'dishcleaner.jpeg'), " +
+                    "('Limpiador de baños', 4, 'bathcleaner.jpg'), " +
+                    "('Limpiador vajilla', 5, 'dishcleaner.jpg'), " +
                     "('Servilletas', 5, 'napkins.jpg'), " +
-                    "('Toallitas', 5, 'wipes.jpeg'), " +
-                    "('Arroz integral', 6, 'wholemealrice.jpeg'), " +
-                    "('Huevos', 7, 'eggs.jpeg');";
+                    "('Toallitas', 5, 'wipes.jpg'), " +
+                    "('Arroz integral', 6, 'wholemealrice.jpg'), " +
+                    "('Huevos', 7, 'eggs.jpg');";
         }
 
 

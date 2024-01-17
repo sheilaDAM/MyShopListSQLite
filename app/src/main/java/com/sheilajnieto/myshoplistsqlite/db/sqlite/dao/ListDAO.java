@@ -14,6 +14,8 @@ import com.sheilajnieto.myshoplistsqlite.DateTimeHelper;
 import com.sheilajnieto.myshoplistsqlite.interfaces.DAO;
 import com.sheilajnieto.myshoplistsqlite.models.Category;
 import com.sheilajnieto.myshoplistsqlite.models.ListClass;
+import com.sheilajnieto.myshoplistsqlite.models.Product;
+import com.sheilajnieto.myshoplistsqlite.models.ProductList;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -147,4 +149,50 @@ public class ListDAO extends DAO<ListClass>  {
         }
         return 0;  // Si hay un error o no se encuentran productos, devolvemos 0
     }
+
+    public List<Product> getProductsFromShoppingList(int listId) {
+        List<Product> products = new ArrayList<>();
+        String[] selectionArgs = {String.valueOf(listId)};
+        try (Cursor c = db.rawQuery("SELECT p.* FROM products p JOIN product_list pl ON p.id = pl.fk_product_id WHERE pl.fk_list_id = ?" , selectionArgs)) {
+            if (c.moveToFirst()) {
+                do {
+                    int id = c.getInt(columnIndex.get("id"));
+                    String productName = c.getString(columnIndex.get("product_name"));
+                    int categoryName = c.getInt(columnIndex.get("fk_category_id"));
+                    String productImagePath = c.getString(columnIndex.get("product_image_path"));
+                    int isPurchasedInt = c.getInt(columnIndex.get("is_purchased"));
+                    Boolean isPurchased;
+                    if(isPurchasedInt == 1) {
+                        isPurchased = true;
+                    }
+                    else{
+                        isPurchased = false;
+                    }
+                    // Aquí debes cargar la imagen desde el recurso o ruta de archivo
+                    Bitmap productImage = BitmapFactory.decodeResource(context.getResources(), context.getResources().getIdentifier(productImagePath, "drawable", context.getPackageName()));
+
+                    products.add(new Product(id, productName, categoryName, isPurchased, productImage));
+                } while (c.moveToNext());
+            }
+        }
+        return products;  // Si hay un error o no se encuentran productos, devolvemos 0
+    }
+
+    public boolean hasProducts(int listId) {
+        String query = "SELECT COUNT(pl.fk_product_id) FROM product_list pl " +
+                "JOIN lists l ON l.id = pl.fk_list_id " +
+                "WHERE pl.fk_list_id = ?";
+
+        String[] selectionArgs = {String.valueOf(listId)};
+
+        try (Cursor c = db.rawQuery(query, selectionArgs)) {
+            if (c.moveToFirst()) {
+                int productCount = c.getInt(0);
+                return productCount > 0;
+            }
+        }
+
+        return false;
+    }
+
 }

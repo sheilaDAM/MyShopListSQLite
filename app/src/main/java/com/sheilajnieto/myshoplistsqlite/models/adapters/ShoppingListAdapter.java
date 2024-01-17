@@ -39,9 +39,8 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ListadoViewHolder holder, int position) {
-       // Cuenta cuenta = cuentas[position];
        ListClass list = lists.get(position);
-       holder.bindCorreo(list, position);
+       holder.bindShoppingList(list, position);
     }
 
     @Override
@@ -67,44 +66,18 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
 
         }
 
-        public void bindCorreo(ListClass list, int position) {
+        public void bindShoppingList(ListClass list, int position) {
             tvListName.setText(list.getName());
-                tvCreationDate.setText(new SimpleDateFormat("dd/MM/yyyy").format(list.getDate()));
+            tvCreationDate.setText(new SimpleDateFormat("dd/MM/yyyy").format(list.getDate()));
             tvProductsQuantity.setText(String.valueOf(productQuantities.get(position)));
 
         }
-/*
-            try {
-                Resources res = context.getResources();
-                String imagenCiclista = "cyclist_" + cyclist.getCyclistId();
-                int resID = res.getIdentifier(imagenCiclista, "drawable", context.getPackageName());
-                if (resID != 0) {
-                    ivCyclist.setImageResource(resID);
-                    Bitmap bitmap = BitmapFactory.decodeResource(res, resID);
-                    cyclist.setImagenCiclista(bitmap);
-                } else {
-                    imagenCiclista = "cyclist_1";
-                    resID = res.getIdentifier(imagenCiclista, "drawable", context.getPackageName());
-                    ivCyclist.setImageResource(resID);
-                    Bitmap bitmap = BitmapFactory.decodeResource(res, resID);
-                    cyclist.setImagenCiclista(bitmap);
-                }
-            } catch (Exception e) {
-            }
-
-        }
- */
-
-        public void updateData(List<ListClass> newLists) {
-            //lists.clear();  // Limpia la lista actual
-            lists.addAll(newLists);  // Agrega la nueva lista
-            notifyDataSetChanged();  // Notifica al adaptador que los datos han cambiado
-        }
 
 
+        @Override
         public void onClick(View v) {
             if (listener != null) {
-                listener.onClick(getAdapterPosition());
+                listener.onShoppingListClicked(getAdapterPosition());
             }
         }
     }

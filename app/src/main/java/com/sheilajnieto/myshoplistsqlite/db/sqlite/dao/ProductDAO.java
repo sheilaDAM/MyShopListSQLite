@@ -50,7 +50,7 @@ public class ProductDAO extends DAO<Product> {
                 do {
                     int id = c.getInt(columnIndex.get("id"));
                     String productName = c.getString(columnIndex.get("product_name"));
-                    String productCategory = c.getString(columnIndex.get("fk_category_id"));
+                    int productCategory = c.getInt(columnIndex.get("fk_category_id"));
                     String imageName = c.getString(columnIndex.get("image"));
 
                     // Construimos la ruta de la imagen desde el nombre
@@ -81,7 +81,7 @@ public class ProductDAO extends DAO<Product> {
         try (Cursor c = db.query(tableName, null, "id = ?",  selectionArgs, null, null, null)) {
             if (c.moveToFirst()) {
                 String productName = c.getString(columnIndex.get("product_name"));
-                String productCategory = c.getString(columnIndex.get("fk_category_id"));
+                int productCategory = c.getInt(columnIndex.get("fk_category_id"));
                 String imageName = c.getString(columnIndex.get("image"));
 
                 // Construimos la ruta de la imagen desde el nombre
@@ -113,9 +113,8 @@ public class ProductDAO extends DAO<Product> {
             if (c.moveToFirst()) {
                 do {
                     int id = c.getInt(columnIndex.get("id"));
-                    String username = c.getString(columnIndex.get("username"));
                     String productName = c.getString(columnIndex.get("product_name"));
-                    String productCategory = c.getString(columnIndex.get("fk_category_id"));
+                    int productCategory = c.getInt(columnIndex.get("fk_category_id"));
                     String imageName = c.getString(columnIndex.get("image"));
 
                     // Construimos la ruta de la imagen desde el nombre
@@ -135,7 +134,7 @@ public class ProductDAO extends DAO<Product> {
         String[] args = new String[] {String.valueOf(e.getId())};
         ContentValues values = new ContentValues();
         values.put("product_name", e.getName());
-        values.put("fk_category_id", e.getCategory());
+        values.put("fk_category_id", e.getFkCategory());
         values.put("product_image_path", e.getImage().toString());
         return db.update(tableName, values, "id=?", args) == 1;
     }
@@ -144,7 +143,7 @@ public class ProductDAO extends DAO<Product> {
     public boolean insert(Product e) {
         ContentValues values = new ContentValues();
         values.put("product_name", e.getName());
-        values.put("fk_category_id", e.getCategory());
+        values.put("fk_category_id", e.getFkCategory());
         values.put("product_image_path", e.getImage().toString());
         // El método insert devuelve el identificador de la fila insertada o
         // -1 en caso de que se haya producido un error

@@ -7,15 +7,15 @@ public class ProductList {
 
     private ListClass list;
     private Product[] product;
-    private boolean bought;
+    private boolean isPurchased;
 
     public ProductList() {
     }
 
-    public ProductList(ListClass list, Product[] product, boolean bought) {
+    public ProductList(ListClass list, Product[] product, boolean isPurchased) {
         this.list = list;
         this.product = product;
-        this.bought = bought;
+        this.isPurchased = isPurchased;
     }
 
     public ListClass getList() {
@@ -34,7 +34,7 @@ public class ProductList {
         this.product = product;
     }
 
-    public boolean isBought() {
-        return bought;
+    public boolean isPurchased() {
+        return isPurchased;
     }
 }
