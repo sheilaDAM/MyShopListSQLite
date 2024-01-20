@@ -55,8 +55,8 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ListadoViewHolder holder, int position) {
-       ListClass list = lists.get(position);
-       holder.bindShoppingList(list, position);
+        ListClass list = lists.get(position);
+        holder.bindShoppingList(list, position);
     }
 
     @Override
@@ -103,7 +103,7 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
     // ------- MANEJO SWIPE PARA ELIMINAR UN LISTADO -------
 
     public void deleteItem(int position) {
-        position = adapterPosition;
+
         // Obtenemos la lista que queremos eliminar
         ListClass listToDelete = lists.get(position);
 
