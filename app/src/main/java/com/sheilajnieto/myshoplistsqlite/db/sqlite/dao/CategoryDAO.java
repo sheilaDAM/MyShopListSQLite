@@ -25,12 +25,12 @@ public class CategoryDAO extends DAO<Category> {
     private static final String TABLE_NAME = "categories";
     private final SQLiteDatabase db;
     private final Map<String, Integer> columnIndex;
-    private Context context;
+    private Context contextMain;
 
     public CategoryDAO(SQLiteDatabase db, Context context) {
         super(TABLE_NAME);
         this.db = db;
-        this.context = context;
+        this.contextMain = context;
         columnIndex = new HashMap<>();
         fillColumnIndex();
     }
@@ -56,12 +56,12 @@ public class CategoryDAO extends DAO<Category> {
                     //String imageNameWithoutExtension = imageName.replaceFirst("[.][^.]+$", "");
                     String imageNameWithoutExtension = imageName.replace(".jpg", "");
                     //obtenemos el id del recurso drawable
-                    int drawableID = context.getResources().getIdentifier(imageNameWithoutExtension, "drawable", context.getPackageName());
+                    int drawableID = contextMain.getResources().getIdentifier(imageNameWithoutExtension, "drawable", contextMain.getPackageName());
 
                     //verificamos que se encontró el recurso (que existe la imagen en drawable)
                     if (drawableID != 0) {
                         // Cargar la imagen como Bitmap
-                        Bitmap imageBitmap = BitmapFactory.decodeResource(context.getResources(), drawableID);
+                        Bitmap imageBitmap = BitmapFactory.decodeResource(contextMain.getResources(), drawableID);
                         categories.add(new Category(id, categoryName, imageBitmap));
                     }
 
@@ -100,13 +100,15 @@ public class CategoryDAO extends DAO<Category> {
             if (c.moveToFirst()) {
                 String categoryName = c.getString(columnIndex.get("category_name"));
                 String imageName = c.getString(columnIndex.get("category_image_path"));
+                String imageNameWithoutExtension = imageName.replace(".jpg", "");
+                int drawableID = contextMain.getResources().getIdentifier(imageNameWithoutExtension, "drawable", contextMain.getPackageName());
 
-                // Construimos la ruta de la imagen desde el nombre
-                String imagePath = "android.resource://" + context.getPackageName() + "/drawable/" + imageName;
-
-                // Cargar la imagen como Bitmap
-                Bitmap imageBitmap = loadImageFromPath(imagePath);
-                return new Category(id, categoryName, imageBitmap);
+                //verificamos que se encontró el recurso (que existe la imagen en drawable)
+                if (drawableID != 0) {
+                    // Cargar la imagen como Bitmap
+                    Bitmap imageBitmap = BitmapFactory.decodeResource(contextMain.getResources(), drawableID);
+                    return new Category(id, categoryName, imageBitmap);
+                }
             }
         }
         return null;
@@ -134,7 +136,7 @@ public class CategoryDAO extends DAO<Category> {
                     String imageName = c.getString(columnIndex.get("category_image_path"));
 
                     // Construimos la ruta de la imagen desde el nombre
-                    String imagePath = "android.resource://" + context.getPackageName() + "/drawable/" + imageName;
+                    String imagePath = "android.resource://" + contextMain.getPackageName() + "/drawable/" + imageName;
 
                     // Cargar la imagen como Bitmap
                     Bitmap imageBitmap = loadImageFromPath(imagePath);
@@ -168,5 +170,70 @@ public class CategoryDAO extends DAO<Category> {
     public boolean delete(Category e) {
         String[] args = new String[] {String.valueOf(e.getId())};
         return db.delete(tableName, "id=?", args) == 1;
+    }
+
+    /*
+    public Category getSelectedCategory(int categoryid, Context context){
+
+        String query =  "SELECT c.id FROM categories c JOIN products p ON c.id = p.fk_category_id WHERE c.id = ?";
+
+        String[] selectionArgs = {String.valueOf(categoryid)};
+        try (Cursor c = db.rawQuery(query, selectionArgs)) {
+            if (c.moveToFirst()) {
+                String categoryName = c.getString(columnIndex.get("category_name"));
+                String imageName = c.getString(columnIndex.get("category_image_path"));
+                String imageNameWithoutExtension = imageName.replace(".jpg", "");
+                int drawableID = context.getResources().getIdentifier(imageNameWithoutExtension, "drawable", context.getPackageName());
+
+                //verificamos que se encontró el recurso (que existe la imagen en drawable)
+                if (drawableID != 0) {
+                    Bitmap imageBitmap = BitmapFactory.decodeResource(context.getResources(), drawableID);
+                    return new Category(categoryid, categoryName, imageBitmap);
+                }
+            }
+        }
+        return null;
+    }
+
+     */
+
+    // Método para obtener todos los productos de una categoría específica
+    public List<Product> findProductsFromCategory(int categoryId) {
+
+        String query = "SELECT p.id FROM products p " +
+                "JOIN categories c ON c.id = p.fk_category_id " +
+                "WHERE c.id = ?";
+
+        List<Product> products = new ArrayList<>();
+        String[] selectionArgs = {String.valueOf(categoryId)};
+        try (Cursor c = db.rawQuery(query, selectionArgs)) {
+            if (c.moveToFirst()) {
+                do {
+                    int id = c.getInt(columnIndex.get("id"));
+                    String productName = c.getString(columnIndex.get("product_name"));
+                    int productCategory = c.getInt(columnIndex.get("fk_category_id"));
+                    String imageName = c.getString(columnIndex.get("image"));
+                    int isPurchasedInt = c.getInt(columnIndex.get("is_purchased"));
+                    boolean isPurchased;
+                    if (isPurchasedInt == 1) {
+                        isPurchased = true;
+                    } else {
+                        isPurchased = false;
+                    }
+
+                    String imageNameWithoutExtension = imageName.replace(".jpg", "");
+                    //obtenemos el id del recurso drawable
+                    int drawableID = contextMain.getResources().getIdentifier(imageNameWithoutExtension, "drawable", contextMain.getPackageName());
+
+                    //verificamos que se encontró el recurso (que existe la imagen en drawable)
+                    if (drawableID != 0) {
+                        // Cargar la imagen como Bitmap
+                        Bitmap imageBitmap = BitmapFactory.decodeResource(contextMain.getResources(), drawableID);
+                        products.add(new Product(id, productName, productCategory, isPurchased, imageBitmap));
+                    }
+                } while (c.moveToNext());
+            }
+        }
+        return products;
     }
 }

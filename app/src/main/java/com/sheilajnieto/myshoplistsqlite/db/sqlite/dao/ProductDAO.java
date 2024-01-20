@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import com.sheilajnieto.myshoplistsqlite.interfaces.DAO;
+import com.sheilajnieto.myshoplistsqlite.models.Category;
 import com.sheilajnieto.myshoplistsqlite.models.Product;
 import com.sheilajnieto.myshoplistsqlite.models.User;
 
@@ -26,9 +27,10 @@ public class ProductDAO extends DAO<Product> {
     private final Map<String, Integer> columnIndex;
     private Context context;
 
-    public ProductDAO(SQLiteDatabase db) {
+    public ProductDAO(SQLiteDatabase db, Context context) {
         super(TABLE_NAME);
         this.db = db;
+        this.context = context;
         columnIndex = new HashMap<>();
         fillColumnIndex();
     }
@@ -95,6 +97,7 @@ public class ProductDAO extends DAO<Product> {
         return null;
     }
 
+
     @Override
     public List<Product> findBy(Map<String, String> condition) {
         String[] selectionArgs = new String[condition.keySet().size()];
@@ -115,14 +118,18 @@ public class ProductDAO extends DAO<Product> {
                     int id = c.getInt(columnIndex.get("id"));
                     String productName = c.getString(columnIndex.get("product_name"));
                     int productCategory = c.getInt(columnIndex.get("fk_category_id"));
-                    String imageName = c.getString(columnIndex.get("image"));
+                    String imageName = c.getString(columnIndex.get("product_image_path"));
 
-                    // Construimos la ruta de la imagen desde el nombre
-                    String imagePath = "android.resource://" + context.getPackageName() + "/drawable/" + imageName;
+                    String imageNameWithoutExtension = imageName.replace(".jpg", "");
+                    //obtenemos el id del recurso drawable
+                    int drawableID = context.getResources().getIdentifier(imageNameWithoutExtension, "drawable", context.getPackageName());
 
-                    // Cargar la imagen como Bitmap
-                    Bitmap imageBitmap = loadImageFromPath(imagePath);
-                    products.add(new Product(id, productName, productCategory, imageBitmap));
+                    //verificamos que se encontró el recurso (que existe la imagen en drawable)
+                    if (drawableID != 0) {
+                        // Cargar la imagen como Bitmap
+                        Bitmap imageBitmap = BitmapFactory.decodeResource(context.getResources(), drawableID);
+                        products.add(new Product(id, productName, productCategory, imageBitmap));
+                    }
                 } while (c.moveToNext());
             }
         }

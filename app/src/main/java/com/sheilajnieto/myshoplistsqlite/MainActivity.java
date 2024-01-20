@@ -25,13 +25,15 @@ import com.sheilajnieto.myshoplistsqlite.db.sqlite.ShoppingListSQLiteHelper;
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.CategoryDAO;
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.ListDAO;
 import com.sheilajnieto.myshoplistsqlite.interfaces.IOnClickListener;
+import com.sheilajnieto.myshoplistsqlite.models.Category;
 import com.sheilajnieto.myshoplistsqlite.models.ListClass;
+import com.sheilajnieto.myshoplistsqlite.models.Product;
 import com.sheilajnieto.myshoplistsqlite.ui.AddListBoxDialogFragment;
 import com.sheilajnieto.myshoplistsqlite.ui.FragmentNoLists;
 import com.sheilajnieto.myshoplistsqlite.ui.FragmentNoProducts;
 import com.sheilajnieto.myshoplistsqlite.ui.ListFragment;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, AddListBoxDialogFragment.OnListAddedListener, IOnClickListener, ListFragment.IOnAttachListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, AddListBoxDialogFragment.OnListAddedListener, IOnClickListener, ListFragment.IOnAttachListener, UpdateListFragmentAfterDelete {
 
     private DrawerLayout drawerLayout;
     private ListFragment listFragment; //fragmento que se muestra cuando hay listas
@@ -42,10 +44,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private View headerLayout;
     private ListFragment.ListType listType; //para determinar qué tipo de listado se muestra, si listas, categorías o productos
     private boolean shoppingListClicked; //para saber si se ha pulsado sobre una lista de la compra
+    private boolean categoryListClicked;
     private SQLiteDatabase db;
     private ListDAO listDAO; //para acceder a los métodos de listDAO y poder hacer las consultas a la base de datos
+    private CategoryDAO categoryDAO;
     private int listSelected; //guarda el id de la lista seleccionada
+    private int categorySelected; //guarda el id de la categoría seleccionada
+    private int productSelected; //guarda el id del producto seleccionado
     private ListClass shoppingListSelected; //guarda la lista seleccionada
+    private Category categoryObjectSelected;
+    private Product productObjectSelected;
     private Fragment currentFragment; //para saber en qué fragment estamos
 
 
@@ -61,7 +69,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             finish();
         }
 
+        shoppingListClicked = false;
         listDAO = new ListDAO(db);
+        categoryDAO = new CategoryDAO(db, this);
 
         setContentView(R.layout.activity_main);
 
@@ -84,15 +94,59 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         btAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (shoppingListClicked && currentFragment instanceof ListFragment) {
+                currentFragment = fragmentManager.findFragmentById(R.id.nav_host_fragment_content_main);
+                if (!shoppingListClicked && currentFragment instanceof FragmentNoLists || currentFragment instanceof ListFragment) {
                     showAddListBoxDialog(); //este método mostrará el cuadro de diálogo para añadir una lista al pulsar el botón
                 } else if (shoppingListClicked && currentFragment instanceof FragmentNoProducts) {
-                    //mostrará el listado de categorías para elegir una
+                    //si estamos dentro de una lista concreta mostrará el listado de categorías para elegir una
                     listType = ListFragment.ListType.CATEGORY_LIST;
                     listFragment.uptadateList(listType);
                     fragmentManager.beginTransaction().addToBackStack(null)
                             .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
                             .commit();
+                }
+            }
+        });
+
+        //------- MANEJO BOTÓN RETROCESO -------
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                currentFragment = fragmentManager.findFragmentById(R.id.nav_host_fragment_content_main);
+
+                // Si estamos en la lista de categorías, regresamos a la lista de la compra
+                if (shoppingListClicked && currentFragment instanceof ListFragment && fragmentManager.getBackStackEntryCount() > 0) {
+                    if(categoryListClicked){
+                        categoryListClicked = false;
+                        listType = ListFragment.ListType.CATEGORY_LIST;
+                        listFragment.uptadateList(listType);
+                        fragmentManager.popBackStack();
+                        fragmentManager.beginTransaction().addToBackStack(null).addToBackStack(null)
+                                .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
+                                .commit();
+                        String shoppingListName = shoppingListSelected.getName();
+                        toolbar.setTitle(shoppingListName);
+                    }else {
+                        shoppingListClicked = false;
+                        listType = ListFragment.ListType.SHOPPING_LIST;
+                        listFragment.uptadateList(listType);
+                        fragmentManager.popBackStack();
+                        fragmentManager.beginTransaction().addToBackStack(null).addToBackStack(null)
+                                .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
+                                .commit();
+                        toolbar.setTitle("Mis listas de la compra");
+                    }
+                } else if (shoppingListClicked && currentFragment instanceof FragmentNoProducts && fragmentManager.getBackStackEntryCount() > 0) {
+                    shoppingListClicked = false;
+                    fragmentManager.popBackStack();
+                    listFragment.uptadateList(ListFragment.ListType.SHOPPING_LIST);
+                    toolbar.setTitle("Mis listas de la compra");
+                }else {
+                    finish();
+                }
+                // Si el cajón de navegación está abierto, lo cerramos
+                if (drawerLayout.isOpen()) {
+                    drawerLayout.close();
                 }
             }
         });
@@ -115,39 +169,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         headerLayout = navigationView.getHeaderView(0);
         updateDataNavigationDrawer();
 
-        //------- MANEJO BOTÓN RETROCESO -------
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                currentFragment = fragmentManager.findFragmentById(R.id.nav_host_fragment_content_main);
-
-                // Si estamos en la lista de categorías, regresamos a la lista de la compra
-                if (shoppingListClicked && currentFragment instanceof ListFragment && fragmentManager.getBackStackEntryCount() > 0) {
-                    listType = ListFragment.ListType.SHOPPING_LIST;
-                    listFragment.uptadateList(listType);
-                    fragmentManager.popBackStack();
-                    fragmentManager.beginTransaction().addToBackStack(null).addToBackStack(null)
-                            .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
-                            .commit();
-                    toolbar.setTitle("Mis listas de la compra");
-                    shoppingListClicked = false;
-                } else if (shoppingListClicked && currentFragment instanceof FragmentNoProducts && fragmentManager.getBackStackEntryCount() > 0) {
-                    fragmentManager.popBackStack();
-                    listFragment.uptadateList(ListFragment.ListType.SHOPPING_LIST);
-                    toolbar.setTitle("Mis listas de la compra");
-                    shoppingListClicked = false;
-                }else {
-                        finish();
-                }
-                // Si el cajón de navegación está abierto, lo cerramos
-                if (drawerLayout.isOpen()) {
-                    drawerLayout.close();
-                }
-            }
-        });
+        //-------- FIN ESTRUCTURA NAVIGATION DRAWER--------
 
 
-} //FIN onCreate
+} //------- FIN onCreate -------
 
     //ESTE MÉTODO SIRVE PARA ACTUALIZAR DATOS DEL NAVIGATION DRAWER
     private void updateDataNavigationDrawer() {
@@ -221,15 +246,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         boolean isInserted = listDAO.insert(newList);
 
         if (isInserted) {
-            listType = ListFragment.ListType.SHOPPING_LIST;
-            listFragment.uptadateList(listType);
+            listFragment = new ListFragment();
             // Si se inserta la nueva lista en la bd se reemplaza el fragmento actual con ListFragment
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
-                    .addToBackStack(null)
-                    .commit();
+            fragmentManager.beginTransaction().replace(R.id.nav_host_fragment_content_main, ListFragment.class, null).commit();
+            listType = ListFragment.ListType.SHOPPING_LIST;
+
             if (listFragment != null) {
-               // listFragment.updateRecyclerView(listName);
+                listFragment = new ListFragment();
             }
         } else {
             // Maneja el caso en que la inserción en la base de datos haya fallado
@@ -247,7 +270,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toolbar.setTitle(shoppingListSelected.getName());
 
         if (listDAO.hasProducts(shoppingListSelected.getId())) {
-
+           //TODO mostrar el listado de productos añadidos a la lista concreta pulsada
             listType = ListFragment.ListType.CATEGORY_LIST;
             listFragment.uptadateList(listType);
             fragmentManager.beginTransaction()
@@ -265,8 +288,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onCategoryClicked(int position) {
+        categoryListClicked = true;
+        categorySelected = position+1; //la posición empieza en 0, pero el id de la lista empieza en 1, para que coincidan sumamos 1
+        categoryObjectSelected = categoryDAO.findById(categorySelected);
+        shoppingListClicked = true;
+        toolbar.setTitle(categoryObjectSelected.getName());
+
+            listType = ListFragment.ListType.PRODUCT_LIST;
+            listFragment.uptadateList(listType);
+            fragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .addToBackStack(null)
+                    .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
+                    .commit();
 
     }
+
+    @Override
+    public void onProductClicked(int position) {
+
+    }
+
 
     @Override
     public SQLiteDatabase getDatabase() {
@@ -285,28 +327,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public ListClass getList() {
         return shoppingListSelected;
     }
+
+    @Override
+    public Category getCategorySelected() {
+        return categoryObjectSelected;
+    }
+
+
+    @Override
+    public void updateFragmentVisibility() {
+        if(listDAO.findAll().size() > 0) {
+
+        } else {
+            fragmentNoLists = new FragmentNoLists();
+            fragmentManager.beginTransaction().addToBackStack(null)
+                    .replace(R.id.nav_host_fragment_content_main, fragmentNoLists)
+                    .commit();
+        }
+    }
 }
-
-/*
-Para insertar la fecha en la base de datos, puedes convertir el Date a String utilizando SimpleDateFormat:
-
-java
-Copy code
-Date now = new Date();
-SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-String formattedDate = sdf.format(now);
-// Ahora, puedes guardar formattedDate en tu base de datos
-Y cuando recuperas el valor de la base de datos, puedes convertir el String a Date de la siguiente manera:
-
-java
-Copy code
-String dateFromDatabase = // Obtén la fecha de la base de datos
-SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-Date parsedDate = null;
-try {
-    parsedDate = sdf.parse(dateFromDatabase);
-} catch (ParseException e) {
-    e.printStackTrace();
-}
-// Ahora, parsedDate contiene la fecha y hora recuperadas
- */
