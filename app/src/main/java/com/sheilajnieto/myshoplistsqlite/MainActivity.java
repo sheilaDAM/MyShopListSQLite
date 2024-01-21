@@ -25,6 +25,7 @@ import com.sheilajnieto.myshoplistsqlite.db.sqlite.ShoppingListSQLiteHelper;
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.CategoryDAO;
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.ListDAO;
 import com.sheilajnieto.myshoplistsqlite.interfaces.IOnClickListener;
+import com.sheilajnieto.myshoplistsqlite.interfaces.UpdateListFragmentAfterDelete;
 import com.sheilajnieto.myshoplistsqlite.models.Category;
 import com.sheilajnieto.myshoplistsqlite.models.ListClass;
 import com.sheilajnieto.myshoplistsqlite.models.Product;
@@ -226,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    /*------ FIN ESTRUCTURA NAVIGATION DRAWER ----------*/
+    /*------ FIN PARTE ESTRUCTURA NAVIGATION DRAWER fuera del onCreate ----------*/
 
     //ESTE MÉTODO SE EJECUTA CUANDO SE HACE CLICK EN EL BOTÓN DE AÑADIR LISTA
     private void showAddListBoxDialog() {
@@ -263,8 +264,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     //CUANDO PULSEMOS SOBRE UN ITEM LISTA (ES DECIR, SOBRE UNA LISTA DE LA COMPRA) SE EJECUTARÁ ESTE MÉTODO
     @Override
-    public void onShoppingListClicked(int position) {
-        listSelected = position+1; //la posición empieza en 0, pero el id de la lista empieza en 1, para que coincidan sumamos 1
+    public void onShoppingListClicked(int position, int realListId) {
+        listSelected = realListId;
         shoppingListSelected = listDAO.findById(listSelected);
         shoppingListClicked = true;
         toolbar.setTitle(shoppingListSelected.getName());
@@ -290,6 +291,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onCategoryClicked(int position) {
         categoryListClicked = true;
         categorySelected = position+1; //la posición empieza en 0, pero el id de la lista empieza en 1, para que coincidan sumamos 1
+
         categoryObjectSelected = categoryDAO.findById(categorySelected);
         shoppingListClicked = true;
         toolbar.setTitle(categoryObjectSelected.getName());

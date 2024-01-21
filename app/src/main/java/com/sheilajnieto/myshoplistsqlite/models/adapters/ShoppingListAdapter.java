@@ -22,6 +22,7 @@ import com.sheilajnieto.myshoplistsqlite.ui.FragmentNoLists;
 import com.sheilajnieto.myshoplistsqlite.ui.ListFragment;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapter.ListadoViewHolder> {
@@ -87,14 +88,14 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
             tvCreationDate.setText(new SimpleDateFormat("dd/MM/yyyy").format(list.getDate()));
             tvProductsQuantity.setText(String.valueOf(productQuantities.get(position)));
 
-
         }
 
 
         @Override
         public void onClick(View v) {
             if (listener != null) {
-                listener.onShoppingListClicked(getAdapterPosition());
+                int realListId =  lists.get(getAdapterPosition()).getId();
+                listener.onShoppingListClicked(getAdapterPosition(), realListId);
                 adapterPosition = getAdapterPosition();
             }
         }
@@ -119,7 +120,6 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
         notifyDataSetChanged();
 
     }
-
 }
 
 

@@ -5,7 +5,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 
-import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -13,10 +12,9 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.sheilajnieto.myshoplistsqlite.MainActivity;
 import com.sheilajnieto.myshoplistsqlite.R;
 import com.sheilajnieto.myshoplistsqlite.SwipeToDelete;
-import com.sheilajnieto.myshoplistsqlite.UpdateListFragmentAfterDelete;
+import com.sheilajnieto.myshoplistsqlite.interfaces.UpdateListFragmentAfterDelete;
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.ShoppingListSQLiteHelper;
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.CategoryDAO;
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.ListDAO;
@@ -33,7 +31,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class ListFragment extends Fragment {
 
