@@ -30,6 +30,7 @@ import com.sheilajnieto.myshoplistsqlite.models.Category;
 import com.sheilajnieto.myshoplistsqlite.models.ListClass;
 import com.sheilajnieto.myshoplistsqlite.models.Product;
 import com.sheilajnieto.myshoplistsqlite.ui.AddListBoxDialogFragment;
+import com.sheilajnieto.myshoplistsqlite.ui.FragmentAppInformation;
 import com.sheilajnieto.myshoplistsqlite.ui.FragmentNoLists;
 import com.sheilajnieto.myshoplistsqlite.ui.FragmentNoProducts;
 import com.sheilajnieto.myshoplistsqlite.ui.ListFragment;
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private FragmentNoLists fragmentNoLists; //fragmento que se muestra cuando no hay listas
     private FragmentNoProducts fragmentNoProducts; //fragmento que se muestra cuando no hay productos
     private FragmentManager fragmentManager = getSupportFragmentManager(); //para poder tratar los fragments por código
+    private FragmentAppInformation fragmentInfo;
     private Toolbar toolbar;
     private View headerLayout;
     private ListFragment.ListType listType; //para determinar qué tipo de listado se muestra, si listas, categorías o productos
@@ -117,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 // Si estamos en la lista de categorías, regresamos a la lista de la compra
                 if (shoppingListClicked && currentFragment instanceof ListFragment && fragmentManager.getBackStackEntryCount() > 0) {
-                    if(categoryListClicked){
+                    if (categoryListClicked) {
                         categoryListClicked = false;
                         listType = ListFragment.ListType.CATEGORY_LIST;
                         listFragment.uptadateList(listType);
@@ -127,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 .commit();
                         String shoppingListName = shoppingListSelected.getName();
                         toolbar.setTitle(shoppingListName);
-                    }else {
+                    } else {
                         shoppingListClicked = false;
                         listType = ListFragment.ListType.SHOPPING_LIST;
                         listFragment.uptadateList(listType);
@@ -135,27 +137,36 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         fragmentManager.beginTransaction().addToBackStack(null).addToBackStack(null)
                                 .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
                                 .commit();
-                        toolbar.setTitle("Mis listas de la compra");
+                        toolbar.setTitle("Mis listas");
                     }
                 } else if (shoppingListClicked && currentFragment instanceof FragmentNoProducts && fragmentManager.getBackStackEntryCount() > 0) {
                     shoppingListClicked = false;
                     fragmentManager.popBackStack();
+                    fragmentManager.beginTransaction().addToBackStack(null).addToBackStack(null)
+                            .replace(R.id.nav_host_fragment_content_main, ListFragment.class, null)
+                            .commit();
                     listFragment.uptadateList(ListFragment.ListType.SHOPPING_LIST);
-                    toolbar.setTitle("Mis listas de la compra");
-                }else {
+                    toolbar.setTitle("Mis listas");
+                } else if (currentFragment instanceof FragmentAppInformation && fragmentManager.getBackStackEntryCount() > 0) {
+                    fragmentManager.popBackStack();
+                    updateFragmentVisibility();
+                    toolbar.setTitle("Mis listas");
+                } else {
                     finish();
                 }
-                // Si el cajón de navegación está abierto, lo cerramos
-                if (drawerLayout.isOpen()) {
-                    drawerLayout.close();
-                }
+            // Si el cajón de navegación está abierto, lo cerramos
+                if(drawerLayout.isOpen())
+
+            {
+                drawerLayout.close();
             }
+        }
         });
 
         //--------ESTRUCTURA NAVIGATION DRAWER--------
 
         toolbar = findViewById(R.id.toolbar);
-        toolbar.setTitle("Mis listas de la compra");
+        toolbar.setTitle("Mis listas");
         setSupportActionBar(toolbar);
 
 
@@ -201,14 +212,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId(); //tenemos el id del item
         FragmentManager fragmentManager = getSupportFragmentManager(); //si queremo tratar los fragments por código
-        if (itemId == R.id.nav_create_shopping_list) {
-            toolbar.setTitle("Crear lista de la compra");
+        if (itemId == R.id.action_info) {
+            toolbar.setTitle("Instrucciones de la app");
+            fragmentInfo = new FragmentAppInformation();
+
+            fragmentManager.beginTransaction().addToBackStack(null)
+                    .replace(R.id.nav_host_fragment_content_main,  fragmentInfo, null)
+                    .commit();
             return true; //esto indica que hemos tomado mando de la acción indicada en la opción del menú
-        } else if (itemId == R.id.nav_show_lists) {
-            toolbar.setTitle("Mis listas de la compra");
-            //para reemplazar un fragment por otro en el container view, cambia lo que hay en el fcvListado por el Fragment.class que indicamos
-            //fragmentManager.beginTransaction().replace(R.id.nav_host_fragment_content_main, FragmentListado.class, null).commit();
-            return true;
         }
         return false;
     }
@@ -339,7 +350,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void updateFragmentVisibility() {
         if(listDAO.findAll().size() > 0) {
-
+            listFragment = new ListFragment();
+            listType = ListFragment.ListType.SHOPPING_LIST;
+            fragmentManager.beginTransaction().addToBackStack(null)
+                    .replace(R.id.nav_host_fragment_content_main, listFragment)
+                    .commit();
         } else {
             fragmentNoLists = new FragmentNoLists();
             fragmentManager.beginTransaction().addToBackStack(null)
