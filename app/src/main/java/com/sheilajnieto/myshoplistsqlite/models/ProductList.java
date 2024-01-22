@@ -5,25 +5,39 @@ package com.sheilajnieto.myshoplistsqlite.models;/*
 
 public class ProductList {
 
-    private ListClass list;
+    private int fkListId;
+    private int fkProductId;
     private Product[] product;
     private boolean isPurchased;
 
     public ProductList() {
     }
 
-    public ProductList(ListClass list, Product[] product, boolean isPurchased) {
-        this.list = list;
+    public ProductList(int fkListId, int fkProductId, Product[] product, boolean isPurchased) {
+        this.fkListId= fkListId;
+        this.fkProductId = fkProductId;
         this.product = product;
         this.isPurchased = isPurchased;
     }
 
-    public ListClass getList() {
-        return list;
+    public int getFkListId() {
+        return fkListId;
     }
 
-    public void setList(ListClass list) {
-        this.list = list;
+    public void setFkListId(int fkListId) {
+        this.fkListId = fkListId;
+    }
+
+    public int getFkProductId() {
+        return fkProductId;
+    }
+
+    public void setFkProductId(int fkProductId) {
+        this.fkProductId = fkProductId;
+    }
+
+    public void setPurchased(boolean purchased) {
+        isPurchased = purchased;
     }
 
     public Product[] getProduct() {

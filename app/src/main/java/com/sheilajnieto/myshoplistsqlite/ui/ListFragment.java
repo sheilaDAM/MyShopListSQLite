@@ -43,6 +43,7 @@ public class ListFragment extends Fragment {
         ListType getListType();
         ListClass getList();
         Category getCategorySelected();
+        Context getContext();
     }
 
     private RecyclerView listRecView;
@@ -101,6 +102,7 @@ public class ListFragment extends Fragment {
     }
 
     private void loadCategoryListFromDB() {
+        contextMain = attachListener.getContext();
         db = ShoppingListSQLiteHelper.getInstance(contextMain).getWritableDatabase();
         categories = categoryDAO.findAll();
     }
@@ -121,7 +123,6 @@ public class ListFragment extends Fragment {
         this.listType = tipoListado;
         switch(tipoListado) {
             case SHOPPING_LIST:
-                // Context activityContext = getActivity();
                 if (shoppingListAdapter == null)
                     shoppingListAdapter = new ShoppingListAdapter(lists, clickListener, productQuantities, db, contextMain);
                 itemTouchHelper = new ItemTouchHelper(new SwipeToDelete(shoppingListAdapter, contextMain, (UpdateListFragmentAfterDelete) requireActivity()));
@@ -163,14 +164,15 @@ public class ListFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         attachListener = (IOnAttachListener) context;
-        /** Obtenemos los datos*/
-        listType = attachListener.getListType();
-        list = attachListener.getList();
-        category = attachListener.getCategorySelected();
         clickListener = (IOnClickListener) context;
         contextMain = context;
         categoryDAO = new CategoryDAO(db, context);
         productDAO = new ProductDAO(db, context);
+        /** Obtenemos los datos*/
+        listType = attachListener.getListType();
+        list = attachListener.getList();
+        category = attachListener.getCategorySelected();
+
       //  db = attachListener.getDatabase();
     }
 

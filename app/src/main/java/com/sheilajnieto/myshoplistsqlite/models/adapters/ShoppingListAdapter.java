@@ -34,6 +34,7 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
     private SQLiteDatabase db;
     private Context contextMain;
     private int adapterPosition;
+    private int realListId;
 
     public ShoppingListAdapter(List<ListClass> lists, IOnClickListener listener, List<Integer> productQuantities, SQLiteDatabase db, Context context) {
         this.lists = lists;
@@ -94,7 +95,7 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
         @Override
         public void onClick(View v) {
             if (listener != null) {
-                int realListId =  lists.get(getAdapterPosition()).getId();
+                realListId =  lists.get(getAdapterPosition()).getId();
                 listener.onShoppingListClicked(getAdapterPosition(), realListId);
                 adapterPosition = getAdapterPosition();
             }
