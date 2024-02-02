@@ -29,11 +29,12 @@ public class ListDAO extends DAO<ListClass>  {
     private static final String TABLE_NAME = "lists";
     private final SQLiteDatabase db;
     private final Map<String, Integer> columnIndex;
-    private Context context;
+    private Context contextMain;
 
-    public ListDAO(SQLiteDatabase db) {
+    public ListDAO(SQLiteDatabase db, Context context) {
         super(TABLE_NAME);
         this.db = db;
+        this.contextMain = context;
         columnIndex = new HashMap<>();
         fillColumnIndex();
     }
@@ -168,10 +169,17 @@ public class ListDAO extends DAO<ListClass>  {
                     else{
                         isPurchased = false;
                     }
-                    // Aquí debes cargar la imagen desde el recurso o ruta de archivo
-                    Bitmap productImage = BitmapFactory.decodeResource(context.getResources(), context.getResources().getIdentifier(productImagePath, "drawable", context.getPackageName()));
 
-                    products.add(new Product(id, productName, categoryName, isPurchased, productImage));
+                    String imageNameWithoutExtension = productImagePath.replace(".jpg", "");
+                    int drawableID = contextMain.getResources().getIdentifier(imageNameWithoutExtension, "drawable", contextMain.getPackageName());
+
+                    //verificamos que se encontró el recurso (que existe la imagen en drawable)
+                    if (drawableID != 0) {
+                        // Cargar la imagen como Bitmap
+                        Bitmap imageBitmap = BitmapFactory.decodeResource(contextMain.getResources(), drawableID);
+                        products.add(new Product(id, productName, categoryName, isPurchased, imageBitmap));
+                    }
+
                 } while (c.moveToNext());
             }
         }

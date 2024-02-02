@@ -34,7 +34,7 @@ import java.util.Map;
 
 public class ListFragment extends Fragment {
 
-    public enum ListType{SHOPPING_LIST, CATEGORY_LIST, PRODUCT_LIST}
+    public enum ListType{SHOPPING_LIST, CATEGORY_LIST, PRODUCT_LIST, PRODUCTS_IN_LIST}
     private ListType listType;
 
 
@@ -61,6 +61,7 @@ public class ListFragment extends Fragment {
     private ProductListAdapter productListAdapter;
     private ListClass list;
     private Category category;
+    private List<Product> productsInShoppingList;
     private IOnAttachListener attachListener;
     private Context contextMain;
     private ItemTouchHelper itemTouchHelper;
@@ -69,7 +70,7 @@ public class ListFragment extends Fragment {
     public ListFragment() {
         super(R.layout.list_fragment);
         db = ShoppingListSQLiteHelper.getInstance(getContext()).getWritableDatabase();
-        listDAO = new ListDAO(db);
+        listDAO = new ListDAO(db, contextMain);
         categoryDAO = new CategoryDAO(db, contextMain);
         productDAO = new ProductDAO(db, contextMain);
     }
@@ -119,6 +120,11 @@ public class ListFragment extends Fragment {
 
     }
 
+    private void loadProductsInShoppingList() {
+        db = ShoppingListSQLiteHelper.getInstance(contextMain).getWritableDatabase();
+        productsInShoppingList = listDAO.getProductsFromShoppingList(list.getId());
+    }
+
     public void uptadateList(ListType tipoListado) {
         this.listType = tipoListado;
         switch(tipoListado) {
@@ -149,6 +155,17 @@ public class ListFragment extends Fragment {
                 if (productListAdapter == null)
                     productListAdapter = new ProductListAdapter(products, clickListener);
                 listRecView.setLayoutManager(new GridLayoutManager(getContext(), 3));
+                listRecView.setAdapter(productListAdapter);
+                productListAdapter.notifyDataSetChanged();
+                break;
+            case PRODUCTS_IN_LIST:
+                list = attachListener.getList();
+                loadProductsInShoppingList();
+                if (productListAdapter == null)
+                    productListAdapter = new ProductListAdapter(productsInShoppingList, clickListener);
+                listRecView.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
+                listRecView.setHasFixedSize(true);
+                listRecView.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
                 listRecView.setAdapter(productListAdapter);
                 productListAdapter.notifyDataSetChanged();
                 break;

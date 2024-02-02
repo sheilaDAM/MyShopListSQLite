@@ -43,7 +43,7 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
         this.contextMain = context;
         this.db = db;
         db = ShoppingListSQLiteHelper.getInstance(contextMain).getWritableDatabase();
-        listDAO = new ListDAO(db);
+        listDAO = new ListDAO(db, contextMain);
 
     }
 

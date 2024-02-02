@@ -25,12 +25,12 @@ public class ProductDAO extends DAO<Product> {
     private static final String TABLE_NAME = "products";
     private final SQLiteDatabase db;
     private final Map<String, Integer> columnIndex;
-    private Context context;
+    private Context contextMain;
 
     public ProductDAO(SQLiteDatabase db, Context context) {
         super(TABLE_NAME);
         this.db = db;
-        this.context = context;
+        this.contextMain = context;
         columnIndex = new HashMap<>();
         fillColumnIndex();
     }
@@ -56,7 +56,7 @@ public class ProductDAO extends DAO<Product> {
                     String imageName = c.getString(columnIndex.get("image"));
 
                     // Construimos la ruta de la imagen desde el nombre
-                    String imagePath = "android.resource://" + context.getPackageName() + "/drawable/" + imageName;
+                    String imagePath = "android.resource://" + contextMain.getPackageName() + "/drawable/" + imageName;
 
                     // Cargar la imagen como Bitmap
                     Bitmap imageBitmap = loadImageFromPath(imagePath);
@@ -84,14 +84,18 @@ public class ProductDAO extends DAO<Product> {
             if (c.moveToFirst()) {
                 String productName = c.getString(columnIndex.get("product_name"));
                 int productCategory = c.getInt(columnIndex.get("fk_category_id"));
-                String imageName = c.getString(columnIndex.get("image"));
+                String imageName = c.getString(columnIndex.get("product_image_path"));
 
-                // Construimos la ruta de la imagen desde el nombre
-                String imagePath = "android.resource://" + context.getPackageName() + "/drawable/" + imageName;
+                String imageNameWithoutExtension = imageName.replace(".jpg", "");
+                int drawableID = contextMain.getResources().getIdentifier(imageNameWithoutExtension, "drawable", contextMain.getPackageName());
 
-                // Cargar la imagen como Bitmap
-                Bitmap imageBitmap = loadImageFromPath(imagePath);
-                return new Product(id, productName, productCategory, imageBitmap);
+                //verificamos que se encontró el recurso (que existe la imagen en drawable)
+                if (drawableID != 0) {
+                    // Cargar la imagen como Bitmap
+                    Bitmap imageBitmap = BitmapFactory.decodeResource(contextMain.getResources(), drawableID);
+                    return new Product(id, productName, productCategory, imageBitmap);
+                }
+
             }
         }
         return null;
@@ -122,12 +126,12 @@ public class ProductDAO extends DAO<Product> {
 
                     String imageNameWithoutExtension = imageName.replace(".jpg", "");
                     //obtenemos el id del recurso drawable
-                    int drawableID = context.getResources().getIdentifier(imageNameWithoutExtension, "drawable", context.getPackageName());
+                    int drawableID = contextMain.getResources().getIdentifier(imageNameWithoutExtension, "drawable", contextMain.getPackageName());
 
                     //verificamos que se encontró el recurso (que existe la imagen en drawable)
                     if (drawableID != 0) {
                         // Cargar la imagen como Bitmap
-                        Bitmap imageBitmap = BitmapFactory.decodeResource(context.getResources(), drawableID);
+                        Bitmap imageBitmap = BitmapFactory.decodeResource(contextMain.getResources(), drawableID);
                         products.add(new Product(id, productName, productCategory, imageBitmap));
                     }
                 } while (c.moveToNext());

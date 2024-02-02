@@ -13,6 +13,12 @@ public class ProductList {
     public ProductList() {
     }
 
+    public ProductList(int fkListId, int fkProductId, boolean isPurchased) {
+        this.fkListId= fkListId;
+        this.fkProductId = fkProductId;
+        this.isPurchased = isPurchased;
+    }
+
     public ProductList(int fkListId, int fkProductId, Product[] product, boolean isPurchased) {
         this.fkListId= fkListId;
         this.fkProductId = fkProductId;

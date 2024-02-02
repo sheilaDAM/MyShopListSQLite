@@ -25,11 +25,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.ShoppingListSQLiteHelper;
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.CategoryDAO;
 import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.ListDAO;
+import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.ProductDAO;
+import com.sheilajnieto.myshoplistsqlite.db.sqlite.dao.ProductListDAO;
 import com.sheilajnieto.myshoplistsqlite.interfaces.IOnClickListener;
 import com.sheilajnieto.myshoplistsqlite.interfaces.UpdateListFragmentAfterDelete;
 import com.sheilajnieto.myshoplistsqlite.models.Category;
 import com.sheilajnieto.myshoplistsqlite.models.ListClass;
 import com.sheilajnieto.myshoplistsqlite.models.Product;
+import com.sheilajnieto.myshoplistsqlite.models.ProductList;
 import com.sheilajnieto.myshoplistsqlite.ui.AddListBoxDialogFragment;
 import com.sheilajnieto.myshoplistsqlite.ui.FragmentAppInformation;
 import com.sheilajnieto.myshoplistsqlite.ui.FragmentNoLists;
@@ -49,9 +52,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private ListFragment.ListType listType; //para determinar qué tipo de listado se muestra, si listas, categorías o productos
     private boolean shoppingListClicked; //para saber si se ha pulsado sobre una lista de la compra
     private boolean categoryListClicked;
+    private boolean productClicked;
     private SQLiteDatabase db;
     private ListDAO listDAO; //para acceder a los métodos de listDAO y poder hacer las consultas a la base de datos
     private CategoryDAO categoryDAO;
+    private ProductListDAO productListDAO;
+    private ProductDAO productDAO;
     private int listSelected; //guarda el id de la lista seleccionada
     private int categorySelected; //guarda el id de la categoría seleccionada
     private int productSelected; //guarda el id del producto seleccionado
@@ -61,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private Fragment currentFragment; //para saber en qué fragment estamos
     private boolean areCategoriesShown;
     private Context contextMain;
+
 
 
     @Override
@@ -76,8 +83,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         shoppingListClicked = false;
-        listDAO = new ListDAO(db);
+        listDAO = new ListDAO(db, this);
         categoryDAO = new CategoryDAO(db, this);
+        productListDAO = new ProductListDAO(db, this);
+        productDAO = new ProductDAO(db, this);
 
         setContentView(R.layout.activity_main);
 
@@ -269,13 +278,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         boolean isInserted = listDAO.insert(newList);
 
         if (isInserted) {
-            listFragment = new ListFragment();
-            // Si se inserta la nueva lista en la bd se reemplaza el fragmento actual con ListFragment
-            fragmentManager.beginTransaction().replace(R.id.nav_host_fragment_content_main, ListFragment.class, null).commit();
-            listType = ListFragment.ListType.SHOPPING_LIST;
-            if (listFragment != null) {
+            if (currentFragment instanceof FragmentNoLists) {
                 listFragment = new ListFragment();
+                // Si se inserta la nueva lista en la bd se reemplaza el fragmento actual con ListFragment
+                fragmentManager.beginTransaction().replace(R.id.nav_host_fragment_content_main, ListFragment.class, null).commit();
+                listType = ListFragment.ListType.SHOPPING_LIST;
+            } else {
+                listType = ListFragment.ListType.SHOPPING_LIST;
+                listFragment.uptadateList(listType);
+                fragmentManager.beginTransaction().replace(R.id.nav_host_fragment_content_main, ListFragment.class, null).commit();
             }
+
         } else {
             // Maneja el caso en que la inserción en la base de datos haya fallado
             Toast.makeText(this, "Error al insertar lista en la BD", Toast.LENGTH_SHORT).show();
@@ -315,7 +328,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onCategoryClicked(int position) {
         categoryListClicked = true;
         categorySelected = position+1; //la posición empieza en 0, pero el id de la lista empieza en 1, para que coincidan sumamos 1
-
         categoryObjectSelected = categoryDAO.findById(categorySelected);
         shoppingListClicked = true;
         toolbar.setTitle(categoryObjectSelected.getName());
@@ -331,10 +343,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void onProductClicked(int position) {
+    public void onProductClicked(int position, int realProducttId) {
+        productSelected = realProducttId;
+        Product product = productDAO.findById(productSelected);
+        int fkProductId = product.getId();
+        int fkListId = shoppingListSelected.getId();
+        boolean isPurchased = false;
+        ProductList pl = new ProductList(fkProductId, fkListId, isPurchased);
+        boolean isInserted = productListDAO.insert(pl);
 
+        if (isInserted) {
+            if (currentFragment instanceof FragmentNoProducts) {
+                listFragment = new ListFragment();
+                listType = ListFragment.ListType.PRODUCTS_IN_LIST;
+                // Si se inserta la nueva lista en la bd se reemplaza el fragmento actual con ListFragment
+                fragmentManager.beginTransaction().replace(R.id.nav_host_fragment_content_main, ListFragment.class, null).commit();
+            } else {
+                listType = ListFragment.ListType.PRODUCTS_IN_LIST;
+                listFragment.uptadateList(listType);
+                fragmentManager.beginTransaction().replace(R.id.nav_host_fragment_content_main, ListFragment.class, null).commit();
+            }
+        } else {
+            // Maneja el caso en que la inserción en la base de datos haya fallado
+            Toast.makeText(this, "Error al insertar producto en lista de compra", Toast.LENGTH_SHORT).show();
+            Log.e("MainActivity", "Error al insertar producto en lista de compra");
+        }
     }
-
 
     @Override
     public SQLiteDatabase getDatabase() {
